@@ -41,15 +41,21 @@ export default createStore({
     recountBankValues({ state, commit }, newCurrency) {
       const dataValues = Object.values(state.bankData);
       const newData = {};
+      const currencyCoef = state.chosenCurrency.Nominal / state.chosenCurrency.Value;
       const refreshedNewCurrency = {
         ...newCurrency,
-        Value: newCurrency.Value / (state.chosenCurrency.Nominal / state.chosenCurrency.Value),
+        Value: newCurrency.Value / currencyCoef,
         Previous: newCurrency.Previous
           / (state.chosenCurrency.Nominal / state.chosenCurrency.Previous),
       };
+      const newConverterCurrency = {
+        ...state.converterCurrency,
+        Value: ((state.converterCurrency.Value / currencyCoef)
+          * (refreshedNewCurrency.Nominal / refreshedNewCurrency.Value)).toFixed(4),
+      };
 
       dataValues.forEach((el) => {
-        const value = (el.Value / (state.chosenCurrency.Nominal / state.chosenCurrency.Value))
+        const value = (el.Value / currencyCoef)
         * (refreshedNewCurrency.Nominal / refreshedNewCurrency.Value);
         const prevValue = value + (el.Previous - el.Value);
         newData[el.CharCode] = {
@@ -57,10 +63,10 @@ export default createStore({
           Value: value.toFixed(4),
           Previous: prevValue.toFixed(4),
         };
-        console.log(value);
       });
       if (newData) {
         commit('changeCurrency', newCurrency);
+        commit('setNewConverterCurrency', newConverterCurrency);
         commit('setBankData', newData);
       }
     },

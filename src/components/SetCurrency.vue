@@ -23,11 +23,15 @@
         <button
           class="item__btn"
           :value="item.CharCode"
-          :disabled="item.CharCode === chosenCurrency.CharCode"
+          :disabled="setGlobalCurrency
+            ? item.CharCode === chosenCurrency.CharCode : item.CharCode === localCurrency.CharCode"
           @click="setNewCurrency"
         >
           {{ item.CharCode }}
-          <i class="item__btn-flag" v-if="item.CharCode === chosenCurrency.CharCode">&#10004;</i>
+          <i class="item__btn-flag" v-if="setGlobalCurrency
+            ? item.CharCode === chosenCurrency.CharCode : item.CharCode === localCurrency.CharCode">
+            &#10004;
+          </i>
         </button>
       </li>
     </ul>

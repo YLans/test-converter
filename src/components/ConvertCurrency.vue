@@ -6,7 +6,7 @@
         <input
           type="number"
           id="item-from"
-          @change="convertInput"
+          @change="handleInputChange"
           placeholder="Введите число"
           :disabled="!disableInput"
         />
@@ -24,7 +24,7 @@
 
 <script>
 import { useStore } from 'vuex';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import SetCurrency from './SetCurrency.vue';
 
@@ -43,14 +43,22 @@ export default {
 
     let timer;
 
-    const convertInput = (evt) => {
-      evt.preventDefault();
-
+    const convertInput = (inputValue, currencyValue) => {
       clearTimeout(timer);
 
       timer = setTimeout(() => {
-        convertedInput.value = (evt.target.value * converterCurrency.value.Value).toFixed(4);
+        convertedInput.value = chosenCurrency.value.CharCode !== converterCurrency.value.CharCode
+          ? (inputValue * currencyValue).toFixed(4)
+          : inputValue;
       }, 1000);
+
+      console.log(convertedInput);
+    };
+
+    const handleInputChange = (evt) => {
+      evt.preventDefault();
+      const coef = converterCurrency.value.Value / converterCurrency.value.Nominal;
+      convertInput(evt.target.value, coef);
     };
 
     const shuffleCurrency = (evt) => {
@@ -58,14 +66,30 @@ export default {
       store.commit('shuffleCurrency');
     };
 
+    const watchCurrencyChange = (newVal, oldVal, converter = false) => {
+      if (newVal.CharCode !== oldVal.CharCode) {
+        const inputValue = document.getElementById('item-from').value;
+        const coef = converter
+          ? newVal.Value / newVal.Nominal
+          : converterCurrency.value.Value / converterCurrency.value.Nominal;
+        console.log(inputValue, coef);
+        convertInput(inputValue, coef);
+      }
+    };
+
+    watch(converterCurrency, (newVal, oldVal) => watchCurrencyChange(newVal, oldVal, true));
+    watch(chosenCurrency, (newVal, oldVal) => watchCurrencyChange(newVal, oldVal));
+
     return {
       bankData,
       chosenCurrency,
       converterCurrency,
       convertedInput,
       disableInput,
+      handleInputChange,
       convertInput,
       shuffleCurrency,
+      watchCurrencyChange,
       setGlobalCurrency: true,
     };
   },
